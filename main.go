@@ -13,7 +13,8 @@ import (
 	api_get_location_area_details "github.com/git-antonyuk/pokedex-cli/internal/api/get_location_area_details"
 	api_get_location_areas "github.com/git-antonyuk/pokedex-cli/internal/api/get_location_areas"
 	api_get_pokemon "github.com/git-antonyuk/pokedex-cli/internal/api/get_pokemon"
-	string_utils_print_list "github.com/git-antonyuk/pokedex-cli/internal/string_utils"
+	"github.com/git-antonyuk/pokedex-cli/internal/strings/string_pokemon_info"
+	string_utils_print_list "github.com/git-antonyuk/pokedex-cli/internal/strings/string_utils"
 )
 
 const COMMAND_LINE_NAME = "Pokedex > "
@@ -67,6 +68,11 @@ func main() {
 			name:        "catch",
 			description: "Try to catch pokemon, command example: catch pikachu",
 			callback:    commandCatch,
+		},
+		"inspect": {
+			name:        "inspect",
+			description: "Inspect pokemon (you have to catch it before), command example: inspect pikachu",
+			callback:    commandInspect,
 		},
 	}
 
@@ -184,4 +190,19 @@ func commandCatch(config *configCommand) error {
     	fmt.Printf("%v escaped!\n", name)
     }
 	return err
+}
+
+func commandInspect(config *configCommand) error {
+	if len(config.fullCommand) < 2 {
+		return errors.New("You forgot to add name as second parameter, name of pokemon")
+	}
+	name := config.fullCommand[1]
+	pokemon, ok := (*config.pokedex)[name]
+	if !ok {
+		fmt.Println("you have not caught that pokemon")
+		return nil
+	} else {
+		string_pokemon_info.PrintPokemonInspectInfo(pokemon)
+	}
+	return nil
 }
