@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 	pokecache "github.com/git-antonyuk/pokedex-cli/internal"
 	api_get_location_area_details "github.com/git-antonyuk/pokedex-cli/internal/api/get_location_area_details"
 	api_get_location_areas "github.com/git-antonyuk/pokedex-cli/internal/api/get_location_areas"
+	api_get_pokemon "github.com/git-antonyuk/pokedex-cli/internal/api/get_pokemon"
 	string_utils_print_list "github.com/git-antonyuk/pokedex-cli/internal/string_utils"
 )
 
@@ -22,6 +24,7 @@ type configCommand struct {
 	Previous       	*string
 	cache 			pokecache.Cache
 	fullCommand 	[]string
+	pokedex        *map[string]api_get_pokemon.PokemonInfo
 }
 type cliCommand struct {
 	name        	string
@@ -57,18 +60,25 @@ func main() {
 		},
 		"explore": {
 			name:        "explore",
-			description: "Explore details of location areas, use name param",
+			description: "Explore details of location areas, command example: explore eterna-city-area",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch",
+			description: "Try to catch pokemon, command example: catch pikachu",
+			callback:    commandCatch,
 		},
 	}
 
 	next := ""
 	previous := ""
+	pokedex := make(map[string]api_get_pokemon.PokemonInfo)
 	config := configCommand{
 		cliCommandsMap: commandsMap,
 		Next:           &next,
 		Previous:       &previous,
 		cache: 			cache,
+		pokedex:        &pokedex,
 	}
 
 	for scanner.Scan() {
@@ -126,14 +136,14 @@ func cleanInput(text string) []string {
 
 // TODO: move to utils
 func getLocationsAndPrintResults(url string, config *configCommand) error {
-	locationData, _ := api_get_location_areas.GetLocationAreas(config.cache, url)
+	locationData, err := api_get_location_areas.GetLocationAreas(config.cache, url)
 	// Update Next and Previous
 	*config.Next = locationData.Next
 	*config.Previous = locationData.Previous
 	// Convert list and print it
 	locationsList := api_get_location_areas.ConvertLocationToNameList(locationData.Results)
 	string_utils_print_list.PrintList(locationsList)
-	return nil
+	return err
 }
 
 func commandMap(config *configCommand) error {
@@ -150,12 +160,28 @@ func commandMapBack(config *configCommand) error {
 
 func commandExplore(config *configCommand) error {
 	if len(config.fullCommand) < 2 {
-		return errors.New("You forgot to add name as second parameter")
+		return errors.New("You forgot to add name as second parameter, name of area")
 	}
 	name := config.fullCommand[1]
 	fmt.Printf("Exploring %v...\n", name)
-	locationDetails, _ := api_get_location_area_details.GetLocationAreaDetails(config.cache, name)
+	locationDetails, err := api_get_location_area_details.GetLocationAreaDetails(config.cache, name)
 	pokemonList := api_get_location_area_details.GetPokemonsList(locationDetails)
 	string_utils_print_list.PrintList(pokemonList)
-	return nil
+	return err
+}
+
+func commandCatch(config *configCommand) error {
+	if len(config.fullCommand) < 2 {
+		return errors.New("You forgot to add name as second parameter, name of pokemon")
+	}
+	name := config.fullCommand[1]
+	fmt.Printf("Throwing a Pokeball at %v...\n", name)
+	pokemonInfo, err := api_get_pokemon.GetPolemonInfo(config.cache, name)
+ 	if rand.Intn(pokemonInfo.BaseExperience / 10) == 0 {
+  		fmt.Printf("%v was caught!\n", name)
+        (*config.pokedex)[name] = pokemonInfo
+    } else {
+    	fmt.Printf("%v escaped!\n", name)
+    }
+	return err
 }
