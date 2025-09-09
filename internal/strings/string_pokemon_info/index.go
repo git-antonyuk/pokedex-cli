@@ -14,11 +14,11 @@ func PrintPokemonInspectInfo(info api_get_pokemon.PokemonInfo) {
 	fmt.Fprintf(&sb, "Weight: %d\n", info.Weight)
 	fmt.Fprint(&sb, "Stats:\n")
 	for _, stat := range info.Stats {
-		fmt.Fprintf(&sb, " -%v %d\n", stat.Stat.Name, stat.BaseStat)
+		fmt.Fprintf(&sb, " - %v %d\n", stat.Stat.Name, stat.BaseStat)
 	}
 	fmt.Fprint(&sb, "Types:\n")
 	for _, infoType := range info.Types  {
-		fmt.Fprintf(&sb, " -%v\n", infoType.Type.Name)
+		fmt.Fprintf(&sb, " - %v\n", infoType.Type.Name)
 	}
 	fmt.Print(sb.String())
 }

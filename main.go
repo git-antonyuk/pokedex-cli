@@ -74,6 +74,11 @@ func main() {
 			description: "Inspect pokemon (you have to catch it before), command example: inspect pikachu",
 			callback:    commandInspect,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "Show list of all the Pokemon you has caught",
+			callback:    commandPokedex,
+		},
 	}
 
 	next := ""
@@ -204,5 +209,16 @@ func commandInspect(config *configCommand) error {
 	} else {
 		string_pokemon_info.PrintPokemonInspectInfo(pokemon)
 	}
+	return nil
+}
+
+func commandPokedex(config *configCommand) error {
+	var sb strings.Builder
+	fmt.Fprint(&sb, "Your Pokedex:\n")
+	for _, pokemon := range *config.pokedex {
+		fmt.Fprintf(&sb, " - %v\n", pokemon.Name)
+	}
+	fmt.Print(sb.String())
+
 	return nil
 }
